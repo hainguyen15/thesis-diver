@@ -10,7 +10,7 @@ body {
     margin: 0;
     padding: 0;
 }
-div#view {
+div#viewer {
     position: absolute;
     left: 0;
     width: 100%;
@@ -20,49 +20,66 @@ div#view {
 }
 </style>
 
-<div id="view"></div>
+<div id="viewer"></div>
 
 <script type="text/javascript" src="{{ url_for('static', filename='jquery.js') }}"></script>
 <script type="text/javascript" src="{{ url_for('static', filename='openseadragon.js') }}"></script>
 <script type="text/javascript" src="{{ url_for('static', filename='openseadragon-scalebar.js') }}"></script>
-<script type="text/javascript" src="{{ url_for('static', filename='openseadragon-annotations.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='openseadragon-svg-overlay.js') }}"></script>
 <script type="text/javascript" src="{{ url_for('static', filename='openseadragon-filtering.js') }}"></script>
 <script type="text/javascript" src="{{ url_for('static', filename='openseadragonrgb.js') }}"></script>
-<script type="text/javascript">
-$(document).ready(function() {
-    var viewer = new OpenSeadragon({
-        id: "view",
-        tileSources: "{{ slide_url }}",
-        prefixUrl: "{{ url_for('static', filename='images/') }}",
-        showNavigator: true,
-        showRotationControl: true,
-        animationTime: 0.5,
-        blendTime: 0.1,
-        constrainDuringPan: true,
-        maxZoomPixelRatio: 2,
-        minZoomLevel: 1,
-        visibilityRatio: 1,
-        zoomPerScroll: 2,
-        timeout: 120000,
-        immediateRender: true
-    });
-    viewer.addHandler("open", function() {
-        // To improve load times, ignore the lowest-resolution Deep Zoom
-        // levels.  This is a hack: we can't configure the minLevel via
-        // OpenSeadragon configuration options when the viewer is created
-        // from DZI XML.
-        viewer.source.minLevel = 8;
+<script type="text/javascript" src="{{ url_for('static', filename='d3.min.js') }}"></script>
+<script>
+    $(document).ready(function() {
+        var viewer = new OpenSeadragon({
+            id: "viewer",
+            tileSources: "{{ slide_url }}",
+            prefixUrl: "{{ url_for('static', filename='images/') }}",
+            showNavigator: true,
+            showRotationControl: true,
+            animationTime: 0.5,
+            blendTime: 0.1,
+            constrainDuringPan: true,
+            maxZoomPixelRatio: 2,
+            minZoomLevel: 1,
+            visibilityRatio: 1,
+            // zoomPerScroll: 2,
+            timeout: 120000,
+        });
+        viewer.addHandler("open", function() {
+            // To improve load times, ignore the lowest-resolution Deep Zoom
+            // levels.  This is a hack: we can't configure the minLevel via
+            // OpenSeadragon configuration options when the viewer is created
+            // from DZI XML.
+            viewer.source.minLevel = 8;
+        });
+
+        var mpp = parseFloat("{{ slide_mpp }}");
+        viewer.scalebar({
+            pixelsPerMeter: mpp ? (1e6 / mpp) : 0,
+            xOffset: 10,
+            yOffset: 10,
+            barThickness: 3,
+            color: '#555555',
+            fontColor: '#333333',
+            backgroundColor: 'rgba(255, 255, 255, 0.5)',
+        });
     });
 
-    var mpp = parseFloat("{{ slide_mpp }}");
-    viewer.scalebar({
-        pixelsPerMeter: mpp ? (1e6 / mpp) : 0,
-        xOffset: 10,
-        yOffset: 10,
-        barThickness: 3,
-        color: '#555555',
-        fontColor: '#333333',
-        backgroundColor: 'rgba(255, 255, 255, 0.5)',
-    });
-});
+
+        var overlay = viewer.svgOverlay();
+
+        var d3Rect = d3.select(overlay.node()).append("rect")
+                            .style('fill', '#f00')
+                            .attr("x", 0.5)
+                            .attr("width", 0.25)
+                            .attr("y", 0.5)
+                            .attr("height", 0.25);
+        overlay.onClick(d3Rect.node(), function() {
+            console.log('click', arguments);
+        });
+
+        $(window).resize(function() {
+            overlay.resize();
+        });
 </script>
