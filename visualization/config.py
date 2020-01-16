@@ -7,6 +7,12 @@ class BaseConfig(object):
     DEEPZOOM_OVERLAP = 1
     DEEPZOOM_LIMIT_BOUNDS = False
     DEEPZOOM_TILE_QUALITY = 75
-    PROJECT_BASE_DIR= os.environ.get('PROJECT_BASE_DIR', '/mnt/WORK/Thesis/datasets/paip2019/training/ws_images')
+    PROJECT_BASE_DIR= os.environ.get('PROJECT_BASE_DIR', '/mnt/WORK/temp')
 
-    MONGO_URI = os.environ.get('')
+
+class DevelopmentConfig(BaseConfig):
+    MONGO_URI = 'localhost:27018'
+
+
+class ProductionConfig(BaseConfig):
+    MONGO_URI = os.environ.get('IMAGE_DB', None)

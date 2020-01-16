@@ -9,18 +9,12 @@
         <script type="text/javascript" src="{{ url_for('static', filename='main.js') }}"></script>
         <script type="text/javascript" src="{{ url_for('static', filename='js/bower_components/requirejs/require.js') }}"></script>
         <script>
-            // require.onResourceLoad = function (context, map, depArray) {
-            //     console.log(map.id, "loaded");
-            // }
-
-            // var require = {
-            //     config: {
-            //         "{{ url_for('static', filename='js/app.js') }}":{
-            //             PROJECT_NAME: "{{ project_name }}"
-            //         }
-            //     }
-            // };
-            require(["{{ url_for('static', filename='js/app.js') }}"]);
+            require(["{{ url_for('static', filename='js/app.js') }}"], 
+                (app) => {
+                    app.updateConfig("{{ base_url }}", "{{ project_name }}");
+                    app.init();
+                }
+            );
         </script>
     </head>
 

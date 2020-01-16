@@ -1,89 +1,62 @@
 #!/home/hainq/anaconda3/envs/thesis/bin/python
 import os
-from io import BytesIO
-from threading import Lock
-from collections import OrderedDict
-
+import json
 import openslide
 from openslide import OpenSlide, OpenSlideError
 from openslide.deepzoom import DeepZoomGenerator
 
 from flask import ( 
-    Flask, jsonify, url_for, 
-    make_response, render_template
+    Flask, jsonify, 
+    make_response, render_template,
+    request
 )
 from flask_restful import abort
 from flask_cors import CORS
+from flask_pymongo import PyMongo
 
 from werkzeug.utils import import_string
+from utils import SlideCache, PILBytesIO, JSONEncoder
 
 app = Flask(__name__)
-cfg = import_string('config.BaseConfig')()
+
+if os.environ.get('FLASK_ENV', 'development') == 'production':
+    cfg = import_string('config.ProductionConfig')()
+else:
+    cfg = import_string('config.DevelopmentConfig')()
+
 app.config.from_object(cfg)
 app.config.from_envvar('DEEPZOOM_TILER_SETTINGS', silent=True)
+app.json_encoder = JSONEncoder
+
+mongo = PyMongo(app)
 CORS(app=app)
-
-class PILBytesIO(BytesIO):
-    def fileno(self):
-        raise AttributeError('Not supported')
-
-
-class _SlideCache(object):
-    def __init__(self, cache_size, dz_opts):
-        self.cache_size = cache_size
-        self.dz_opts = dz_opts
-        self._lock = Lock()
-        self._cache = OrderedDict()
-
-    def get(self, path):
-        with self._lock:
-            if path in self._cache:
-                # Move to end of LRU
-                slide_cache = self._cache.pop(path)
-                self._cache[path] = slide_cache
-                return slide_cache
-
-        osr = OpenSlide(path)
-        slide_dz = DeepZoomGenerator(osr, **self.dz_opts)
-        try:
-            mpp_x = osr.properties[openslide.PROPERTY_NAME_MPP_X]
-            mpp_y = osr.properties[openslide.PROPERTY_NAME_MPP_Y]
-            slide_dz.mpp = (float(mpp_x) + float(mpp_y)) / 2
-        except (KeyError, ValueError):
-            slide_dz.mpp = 0
-
-        with self._lock:
-            if path not in self._cache:
-                if len(self._cache) == self.cache_size:
-                    self._cache.popitem(last=False)
-                self._cache[path] = slide_dz
-        return slide_dz
 
 
 @app.before_first_request
 def setup():
     app.basedir = os.path.abspath(app.config['PROJECT_BASE_DIR'])
+    app.base_url = os.environ.get('BASE_URL', 'http://localhost:5000/')
     config_map = {
         'DEEPZOOM_TILE_SIZE': 'tile_size',
         'DEEPZOOM_OVERLAP': 'overlap',
         'DEEPZOOM_LIMIT_BOUNDS': 'limit_bounds'
     }
     opts = dict((v, app.config[k]) for k, v in config_map.items())
-    app.cache = _SlideCache(app.config['SLIDE_CACHE_SIZE'], opts)
+    app.cache = SlideCache(app.config['SLIDE_CACHE_SIZE'], opts)
 
 
-@app.route('/')
-def index(project_name='a'):
-    return render_template('index.html', project_name=project_name)
+@app.route('/<project_name>')
+def index(project_name='default'):
+    return render_template('index.html', project_name=project_name, base_url=app.base_url)
 
 
-@app.route('/<id>/tiles')
-def slide_props(id):
-    slide = OpenSlide(os.path.join(app.basedir, f'{id}.svs'))
-    # slide = _get_slide(f'{id}.svs')
+@app.route('/<project_name>/<fileid>/tiles')
+def slide_props(project_name, fileid):
+    slide = OpenSlide(os.path.join(app.basedir, project_name, 'wsi', f'{fileid}.svs'))
     dz = DeepZoomGenerator(slide)
     response = {
         'levels': dz.level_count,
+        'name': fileid,
         'magnification': slide.properties[openslide.PROPERTY_NAME_OBJECTIVE_POWER],
         'mm_x': slide.properties[openslide.PROPERTY_NAME_MPP_X],
         'mm_y': slide.properties[openslide.PROPERTY_NAME_MPP_Y],
@@ -96,11 +69,11 @@ def slide_props(id):
     return jsonify(response)
 
 
-@app.route('/proj/<id>')
-def slide_geometry(id):
-    import json
-    with open('template.json') as template:
-        data = json.load(template)
+@app.route('/<project_name>/<fileid>/anno')
+def slide_geometry(project_name, fileid):
+    geojson = os.path.join(app.basedir, project_name, 'geojson', f'{fileid}.json')
+    with open(geojson) as res:
+        data = json.load(res)
     return jsonify(data)
 
 
@@ -134,6 +107,30 @@ def _get_slide(path):
     except OpenSlideError:
         abort(404)
 
+
+@app.route('/<project_name>/images', methods=['GET', 'POST', 'DELETE', 'PATCH'])
+def proj_images(project_name):
+    if request.method == 'GET':
+        data = mongo.db.images.find({ 'project_name': project_name })
+        return jsonify(data), 200
+
+    data = request.get_json()
+    # POST multiple images at the same time
+    if request.method == 'POST':
+        if data.get('project_name', None) is None or data.get('images', None) is None:
+            abort(403, message='Requested data is invalid.')
+
+        imgs = data['images']
+        if not imgs:
+            abort(403, message='Image list is empty!')
+        
+        mongo.db.images.insert_many(imgs)
+        return jsonify({
+            'status': True,
+            'msg': 'Images added successfully'
+        })
+    else:
+        raise NotImplementedError
 
 if __name__ == "__main__":
     app.run(debug=True)

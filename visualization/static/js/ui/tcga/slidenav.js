@@ -3,11 +3,12 @@ define("tcga/slidenav", ["config", "viewer", "pubsub", "slide", "jquery", "webix
     webix.proxy.PagingGirderItems = {
       $proxy:true,
       load:function(view, callback, details){
-        if (details){
-          var data = webix.ajax(this.source+"?limit="+details.count+"&offset="+details.start);
-        } else {
-            var data = webix.ajax(this.source+"?limit=5&offset=0"); 
-        }
+        // if (details){
+        //   var data = webix.ajax(this.source+"?limit="+details.count+"&offset="+details.start);
+        // } else {
+        //     var data = webix.ajax(this.source+"?limit=5&offset=0"); 
+        // }
+        var data = webix.ajax(this.source);
          
         data.then((resp) => {
             webix.ajax.$callback(view, callback, resp.text());
@@ -19,6 +20,7 @@ define("tcga/slidenav", ["config", "viewer", "pubsub", "slide", "jquery", "webix
         view: "dataview",
         id: "thumbnails",
         select: true,
+        // template: "<div class='webix_strong'>#name#</div><img src='" + config.BASE_URL + "/item/#_id#/tiles/thumbnail'/>",
         template: "<div class='webix_strong'>#name#</div><img src='" + config.BASE_URL + "/item/#_id#/tiles/thumbnail'/>",
         pager: "item_pager",
         datafetch: 25,
@@ -39,17 +41,22 @@ define("tcga/slidenav", ["config", "viewer", "pubsub", "slide", "jquery", "webix
                 }
             },
             onAfterRender: webix.once(function() {
-                $.get(config.BASE_URL + "/tcga/cohort", function(resp){
-                    var cohorts = resp["data"];
-                    // var cohortList = $$("slideset").getPopup().getList();
-                    // cohortList.clearAll();
-                    // cohortList.parse(cohorts);
-                    // $$("slideset").setValue(cohorts[0].id);
+                // var url = "PagingGirderItems->" + config.BASE_URL + "/tcga/cohort/" + cohorts[0]._id + "/images";
+                var url = "PagingGirderItems->" + config.BASE_URL + config.PROJECT_NAME + "/images";
+                $$("thumbnails").clearAll();
+                $$("thumbnails").load(url); 
+                // $.get(config.BASE_URL + "/tcga/cohort", function(resp){
+                    
+                //     var cohorts = resp["data"];
+                //     // var cohortList = $$("slideset").getPopup().getList();
+                //     // cohortList.clearAll();
+                //     // cohortList.parse(cohorts);
+                //     // $$("slideset").setValue(cohorts[0].id);
 
-                    var url = "PagingGirderItems->" + config.BASE_URL + "/tcga/cohort/" + cohorts[0]._id + "/images";
-                    $$("thumbnails").clearAll();
-                    $$("thumbnails").load(url); 
-                });    
+                //     var url = "PagingGirderItems->" + config.BASE_URL + "/tcga/cohort/" + cohorts[0]._id + "/images";
+                //     $$("thumbnails").clearAll();
+                //     $$("thumbnails").load(url); 
+                // });    
             })
         }
     };
@@ -66,75 +73,6 @@ define("tcga/slidenav", ["config", "viewer", "pubsub", "slide", "jquery", "webix
 
     //dropdown for slide groups
     //Data is pulled from DAS webservice
-    dropdown = {
-        view: "combo",
-        placeholder: "Select Cohort",
-        id: "slideset",
-        options: {
-            body: {
-                template: "#name#"  
-            }
-        },
-        on: {
-            onChange: function(id) {
-                var item = this.getPopup().getBody().getItem(id);
-
-                var url = "PagingGirderItems->" + config.BASE_URL + "/tcga/cohort/" + item._id + "/images";
-                $$("thumbnails").clearAll();
-                $$("thumbnails").setPage(0);
-                $$("thumbnails").load(url);
-             
-                // $.get(config.BASE_URL + "/tcga/case?limit=2000&cohort=" + item._id, function(resp){
-                //     var cases = resp["data"]
-                //     var sFoldersMenu = $$("samples").getPopup().getList();
-                //     $$("samples").setValue();
-                //     sFoldersMenu.clearAll();
-                //     sFoldersMenu.parse(cases);
-                // });
-            },
-            // onAfterRender: webix.once(function() {
-            //     $.get(config.BASE_URL + "/tcga/cohort", function(resp){
-            //         var cohorts = resp["data"];
-            //         // var cohortList = $$("slideset").getPopup().getList();
-            //         // cohortList.clearAll();
-            //         // cohortList.parse(cohorts);
-            //         // $$("slideset").setValue(cohorts[0].id);
-
-            //         var url = "PagingGirderItems->" + config.BASE_URL + "/tcga/cohort/" + cohorts[0]._id + "/images";
-            //         $$("thumbnails").clearAll();
-            //         $$("thumbnails").load(url); 
-            //     });    
-            // })
-        }
-    };
-
-    // samples_dropdown = {
-    //     view: "combo",
-    //     placeholder: "Select Sample",
-    //     id: "samples",
-    //     options: {
-    //         filter:function(item, value){
-    //             if(item.name.toString().toLowerCase().indexOf(value.toLowerCase()) > -1)
-    //               return true;
-    //             return false;
-    //         },
-    //         body: {
-    //             template: "#name#"
-    //         }
-    //     },
-    //     on: {
-    //         onChange: function(id) {
-    //             if(id){
-    //                 var item = this.getPopup().getBody().getItem(id);
-    //                 var thumbs = $$("thumbnails");
-    //                 var url = config.BASE_URL + "/tcga/case/" + item._id + "/images";
-    //                 thumbs.clearAll();
-    //                 thumbs.setPage(0);
-    //                 thumbs.load(url);
-    //             }
-    //         }
-    //     }
-    // };
 
     //slides panel is the left panel, contains two rows 
     //containing the slide group dropdown and the thumbnails panel 

@@ -33,7 +33,7 @@ define("tcga/main", ["tcga/slidenav", "common/toolbar", "common/header", "common
             };
 
 
-    function init(project_name) {
+    function init() {
         //This is the Openseadragon layer
         viewerPanel = {
             id: "viewer_root",

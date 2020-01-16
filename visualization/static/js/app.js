@@ -45,25 +45,36 @@ define(["ui", "config", "jquery", "session", "webix", "module"], function(ui, co
     //     );
     // }
 
-    webix.ready(function() {
-        const project_name = config.PROJECT_NAME;
-        console.log(`THIS IS FROM APP JS ${project_name}`);
-        ui.init(project_name);
+    function updateConfig(baseUrl, projName) {
+        config.PROJECT_NAME = projName;
+        config.BASE_URL = baseUrl;
+    }
 
-        webix.extend($$("viewer_panel"), webix.ProgressBar);
-        webix.extend($$("viewer_panel"), webix.OverlayBox);
-
-
-        if (config.UI == "standard")
-            require(["routes", "login", ]);
-        else
-            require(["routes",  "login" ]);
-        });
-
-    $.each(config.MODULE_CONFIG, function(moduleName, moduleEnabled) {
-            if (moduleEnabled) {
-                require([moduleName]);
-            //    webix.message("Enabling " + moduleName);
-                                }
+    function init() {
+        webix.ready(function() {
+            console.log(`THIS IS FROM APP JS ${config.PROJECT_NAME}`);
+            ui.init();
+    
+            webix.extend($$("viewer_panel"), webix.ProgressBar);
+            webix.extend($$("viewer_panel"), webix.OverlayBox);
+    
+    
+            if (config.UI == "standard")
+                require(["routes", "login", ]);
+            else
+                require(["routes",  "login" ]);
             });
+    
+        $.each(config.MODULE_CONFIG, function(moduleName, moduleEnabled) {
+                if (moduleEnabled) {
+                    require([moduleName]);
+                //    webix.message("Enabling " + moduleName);
+                                    }
+                });    
+    }
+    
+    return {
+        init: init,
+        updateConfig: updateConfig
+    }
 });
