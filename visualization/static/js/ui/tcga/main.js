@@ -33,7 +33,7 @@ define("tcga/main", ["tcga/slidenav", "common/toolbar", "common/header", "common
             };
 
 
-    function init() {
+    function init(project_name) {
         //This is the Openseadragon layer
         viewerPanel = {
             id: "viewer_root",
@@ -43,7 +43,7 @@ define("tcga/main", ["tcga/slidenav", "common/toolbar", "common/header", "common
                 {
                     id: "viewer_body",
                     cols: [
-                        { view: "template", id: "viewer_panel", content: "geo_osd" }
+                        { view: "template", id: "viewer_panel", content: "geo_osd" },
                         // { gravity: 0.2, collapsed: true, view: "accordion", multi: true, id: , 
                         // body: { rows: [{ template: "HI" }] } }
                     ]
@@ -66,7 +66,6 @@ define("tcga/main", ["tcga/slidenav", "common/toolbar", "common/header", "common
                         {
 
                             rows: [
-
                                 viewerPanel,
                                 footer
                             ]

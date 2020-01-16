@@ -4,16 +4,23 @@
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset = UTF-8">
         <title>Digital Slide Archive (DSA)</title>
-        <link rel="stylesheet" type="text/css" href="bower_components/webix/codebase/webix.css">
-        <link rel="stylesheet" type="text/css" href="css/dsa.css">
-        <script type="text/javascript" src="main.js"></script>
-        <script type="text/javascript" src="bower_components/requirejs/require.js"></script>
+        <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='js/bower_components/webix/codebase/webix.css') }}">
+        <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/dsa.css') }}">
+        <script type="text/javascript" src="{{ url_for('static', filename='main.js') }}"></script>
+        <script type="text/javascript" src="{{ url_for('static', filename='js/bower_components/requirejs/require.js') }}"></script>
         <script>
-            requirejs.onResourceLoad = function (context, map, depArray) {
-                // console.log(map.id, "loaded");
-            }
+            // require.onResourceLoad = function (context, map, depArray) {
+            //     console.log(map.id, "loaded");
+            // }
 
-            requirejs(['app/app.js']);
+            // var require = {
+            //     config: {
+            //         "{{ url_for('static', filename='js/app.js') }}":{
+            //             PROJECT_NAME: "{{ project_name }}"
+            //         }
+            //     }
+            // };
+            require(["{{ url_for('static', filename='js/app.js') }}"]);
         </script>
     </head>
 

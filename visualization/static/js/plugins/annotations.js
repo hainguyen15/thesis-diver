@@ -450,8 +450,8 @@ require(["viewer", "slide", "geo", "pubsub", "config"], function(viewer, slide, 
     /***********************************************************************************************/
 
     function getMetadataAndLoadAnnotations() {
-        var url = config.BASE_URL + "/item/" + slide._id;
-        // var url = 'http://localhost:5000/01_01_0088';
+        // var url = config.BASE_URL + "/item/" + slide._id;
+        var url = 'http://localhost:5000/proj/01_01_0088';
         webix.ajax().get(url, (text) => {
             resetDataStructures();
             currentSlide = JSON.parse(text);

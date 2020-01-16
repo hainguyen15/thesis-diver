@@ -13,8 +13,9 @@ define("slide", ["viewer", "config", "pubsub"], function(viewer, config, pubsub)
 		
        	$.ajax({
        		context: this,
-			   url: config.BASE_URL + "/item/" + this._id + "/tiles",
-			// url: `http://localhost:5000/01_01_0083/tiles`,
+			//    url: config.BASE_URL + "/item/" + this._id + "/tiles",
+			// url: `${config.BASE_URL}/01_01_0083/tiles`,
+			url: "http://localhost:5000/01_01_0083/tiles",
 			type: 'GET',
        		success: (data) => {
 				this.tiles = data;
@@ -29,8 +30,8 @@ define("slide", ["viewer", "config", "pubsub"], function(viewer, config, pubsub)
 	                minLevel: 0,
 					maxLevel: data.levels - 1,
 	                getTileUrl: (level, x, y) => {
-						return `${config.BASE_URL}/item/${itemId}/tiles/zxy/${level}/${x}/${y}?edge=crop`;
-						// return `http://localhost:5000/01_01_0083.svs_files/${level}/${x}_${y}.jpeg`
+						// return `${config.BASE_URL}/item/${itemId}/tiles/zxy/${level}/${x}/${y}?edge=crop`;
+						return `http://localhost:5000/01_01_0083.svs_files/${level}/${x}_${y}.jpeg`
 	            	}
 	    		};
 

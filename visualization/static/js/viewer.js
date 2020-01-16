@@ -15,14 +15,14 @@ define("viewer", ["osdImgHelper","osd", "pubsub","config"], function(oshIH, osd,
 
     var viewer = osd({
         id: 'image_viewer',
-        prefixUrl: "bower_components/openseadragon/built-openseadragon/openseadragon/images/",
+        prefixUrl: "static/js/bower_components/openseadragon/built-openseadragon/openseadragon/images/",
         navigatorPosition: "BOTTOM_RIGHT",
         showNavigator: true
     });
 
       //this loads after the viewer is created..
 
-       console.log(config);
+      //  console.log(config);
      if ( config.MODULE_CONFIG["zoomButtons"] )  { require(["zoomButtons"])};
 
     return viewer;

@@ -3,28 +3,30 @@ import os
 from io import BytesIO
 from threading import Lock
 from collections import OrderedDict
-import re
-from unicodedata import normalize
 
 import openslide
 from openslide import OpenSlide, OpenSlideError
 from openslide.deepzoom import DeepZoomGenerator
-from flask import (
-    Flask, make_response, 
-    render_template, url_for, jsonify
+
+from flask import ( 
+    Flask, jsonify, url_for, 
+    make_response, render_template
 )
 from flask_restful import abort
-from werkzeug.utils import import_string
+from flask_cors import CORS
 
+from werkzeug.utils import import_string
 
 app = Flask(__name__)
 cfg = import_string('config.BaseConfig')()
 app.config.from_object(cfg)
 app.config.from_envvar('DEEPZOOM_TILER_SETTINGS', silent=True)
+CORS(app=app)
 
 class PILBytesIO(BytesIO):
     def fileno(self):
         raise AttributeError('Not supported')
+
 
 class _SlideCache(object):
     def __init__(self, cache_size, dz_opts):
@@ -58,31 +60,6 @@ class _SlideCache(object):
         return slide_dz
 
 
-class _Directory(object):
-    def __init__(self, basedir, relpath=''):
-        self.name = os.path.basename(relpath)
-        self.children = []
-        for name in sorted(os.listdir(os.path.join(basedir, relpath))):
-            if not os.path.isfile(name):
-                continue
-            cur_relpath = os.path.join(relpath, name)
-            cur_path = os.path.join(basedir, cur_relpath)
-
-            if OpenSlide.detect_format(cur_path):
-                self.children.append(_SlideFile(cur_relpath))
-
-
-class _SlideFile(object):
-    def __init__(self, relpath):
-        self.name = os.path.basename(relpath)
-        self.url_path = relpath
-
-
-@app.route('/')
-def test():
-    return  'Hello World'
-
-
 @app.before_first_request
 def setup():
     app.basedir = os.path.abspath(app.config['PROJECT_BASE_DIR'])
@@ -95,42 +72,37 @@ def setup():
     app.cache = _SlideCache(app.config['SLIDE_CACHE_SIZE'], opts)
 
 
-@app.route('/<proj>')
-def fetch_project(proj):
-    proj_dir = os.path.join(app.basedir, proj)
-    if not os.path.exists(proj_dir):
-        abort(404, message='Project not found')
-    imgs = os.listdir(proj_dir)
-    if not imgs:
-        abort(404, message='Data not found')
-    children = []
-    for name in sorted(imgs):
-        cur_path = os.path.join(app.basedir, proj, name)
-        if not os.path.isfile(cur_path) or not OpenSlide.detect_format(cur_path):
-            continue
-        children.append({
-            'img_name': os.path.basename(cur_path),
-            'url_path': url_for('slide', proj=proj, imname=name)
-        })
-    return make_response(jsonify(children), 200)
+@app.route('/')
+def index(project_name='a'):
+    return render_template('index.html', project_name=project_name)
 
 
-@app.route('/<proj>/<imname>')
-def slide(proj, imname):
-    path = os.path.join(proj, 'ws_images', imname)
-    slide_obj = _get_slide(path)
-    slide_url = url_for('dzi', path=path)
-    return render_template('slide-fullpage.html', slide_url=slide_url,
-            slide_filename=slide_obj.filename, slide_mpp=slide_obj.mpp)
+@app.route('/<id>/tiles')
+def slide_props(id):
+    slide = OpenSlide(os.path.join(app.basedir, f'{id}.svs'))
+    # slide = _get_slide(f'{id}.svs')
+    dz = DeepZoomGenerator(slide)
+    response = {
+        'levels': dz.level_count,
+        'magnification': slide.properties[openslide.PROPERTY_NAME_OBJECTIVE_POWER],
+        'mm_x': slide.properties[openslide.PROPERTY_NAME_MPP_X],
+        'mm_y': slide.properties[openslide.PROPERTY_NAME_MPP_Y],
+        'sizeX': slide.level_dimensions[0][0],
+        'sizeY': slide.level_dimensions[0][1],
+        'tileHeight': app.config['DEEPZOOM_TILE_SIZE'],
+        'tileWidth': app.config['DEEPZOOM_TILE_SIZE']
+    }
+    slide.close()
+    return jsonify(response)
 
 
-@app.route('/<path:path>.dzi')
-def dzi(path):
-    _format = app.config['DEEPZOOM_FORMAT']
-    slide_obj = _get_slide(path)
-    resp = make_response(slide_obj.get_dzi(_format))
-    resp.mimetype = 'application/xml'
-    return resp
+@app.route('/proj/<id>')
+def slide_geometry(id):
+    import json
+    with open('template.json') as template:
+        data = json.load(template)
+    return jsonify(data)
+
 
 @app.route('/<path:path>_files/<int:level>/<int:col>_<int:row>.<imformat>')
 def tile(path, level, col, row, imformat):
@@ -153,9 +125,6 @@ def tile(path, level, col, row, imformat):
 
 def _get_slide(path):
     path = os.path.abspath(os.path.join(app.basedir, path))
-    if not path.startswith(app.basedir + os.path.sep):
-        # Directory traversal
-        abort(404)
     if not os.path.exists(path):
         abort(404)
     try:
@@ -165,5 +134,6 @@ def _get_slide(path):
     except OpenSlideError:
         abort(404)
 
+
 if __name__ == "__main__":
-    app.run(debug=True, port=5000, threaded=True)
+    app.run(debug=True)

@@ -27,26 +27,28 @@ are looking for, then go to the module and add the variable
 you want to return to the return object 
 */
 
-define(["ui", "config", "jquery", "session", "webix"], function(ui, config, $, session) {
+define(["ui", "config", "jquery", "session", "webix", "module"], function(ui, config, $, session) {
 
-    if (session.valid()) {
-        $.ajaxSetup({
-            headers: { 'Girder-Token': session.token() }
-        });
+    // if (session.valid()) {
+    //     $.ajaxSetup({
+    //         headers: { 'Girder-Token': session.token() }
+    //     });
 
-        webix.ajax().headers({
-            'Girder-Token': session.token()
-        });
+    //     webix.ajax().headers({
+    //         'Girder-Token': session.token()
+    //     });
 
-        webix.attachEvent("onBeforeAjax",
-            function(mode, url, data, request, headers, files, promise) {
-                headers["Girder-Token"] = session.token();
-            }
-        );
-    }
+    //     webix.attachEvent("onBeforeAjax",
+    //         function(mode, url, data, request, headers, files, promise) {
+    //             headers["Girder-Token"] = session.token();
+    //         }
+    //     );
+    // }
 
     webix.ready(function() {
-        ui.init();
+        const project_name = config.PROJECT_NAME;
+        console.log(`THIS IS FROM APP JS ${project_name}`);
+        ui.init(project_name);
 
         webix.extend($$("viewer_panel"), webix.ProgressBar);
         webix.extend($$("viewer_panel"), webix.OverlayBox);
@@ -61,8 +63,7 @@ define(["ui", "config", "jquery", "session", "webix"], function(ui, config, $, s
     $.each(config.MODULE_CONFIG, function(moduleName, moduleEnabled) {
             if (moduleEnabled) {
                 require([moduleName]);
-              //  webix.message("Enabling " + moduleName);
+            //    webix.message("Enabling " + moduleName);
                                 }
             });
-
 });

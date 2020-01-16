@@ -16,13 +16,13 @@ Return:
 
 define("ui/main", ["standard", "tcga", "config"], function(standard, tcga, config) {
 
-    function init(){
+    function init(project_name){
         switch(config.UI){
             case "standard":
                 standard.init();
                 break;
             case "tcga":
-                tcga.init();
+                tcga.init(project_name);
                 break;
             default:
                 console.error("Invalid configuration: " + config.UI + " UI not found");

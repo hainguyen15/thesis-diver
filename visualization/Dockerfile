@@ -1,16 +1,8 @@
-FROM node:10.15.3
+FROM python:3.6
 
-ENV PATH=/usr/src/app/node_modules/.bin:$PATH
+WORKDIR /usr/src/app
+COPY . .
+RUN pip install --upgrade pip
+RUN pip install -r requirements.txt
 
-RUN apt-get install nginx
-RUN rm /etc/nginx/conf.d/default.conf
-
-COPY ./nginx/prod.conf /etc/nginx/conf.d
-COPY . /usr/src/app
-
-WORKDIR /usr/src/app/web
-
-RUN npm install -g bower
-RUN bower install
-
-CMD [ "nginx", "-g", "daemon off;" ]
+ENTRYPOINT [ "gunicorn", "-b 0.0.0.0:5000", "wsgi:app" ]
