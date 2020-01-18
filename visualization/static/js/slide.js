@@ -13,25 +13,22 @@ define("slide", ["viewer", "config", "pubsub"], function(viewer, config, pubsub)
 		
        	$.ajax({
        		context: this,
-			//    url: config.BASE_URL + "/item/" + this._id + "/tiles",
-			// url: `${config.BASE_URL}/01_01_0083/tiles`,
-			url: "http://localhost:5000/01_01_0083/tiles",
+			url: `${config.BASE_URL}${config.PROJECT_NAME}/${this._id}/tiles`,
 			type: 'GET',
        		success: (data) => {
-				this.tiles = data;
+				this.tiles = data.tiles;
 				itemId = this._id;
 	            pubsub.publish("SLIDE", this);
 				
 	   			tileSource = {
-	            	width: data.sizeX,
-	                height: data.sizeY,
-	                tileWidth: data.tileWidth,
-	                tileHeight: data.tileHeight,
+	            	width: data.tiles.sizeX,
+	                height: data.tiles.sizeY,
+	                tileWidth: data.tiles.tileWidth,
+	                tileHeight: data.tiles.tileHeight,
 	                minLevel: 0,
-					maxLevel: data.levels - 1,
+					maxLevel: data.tiles.levels - 1,
 	                getTileUrl: (level, x, y) => {
-						// return `${config.BASE_URL}/item/${itemId}/tiles/zxy/${level}/${x}/${y}?edge=crop`;
-						return `http://localhost:5000/01_01_0083.svs_files/${level}/${x}_${y}.jpeg`
+						return `${config.BASE_URL}${config.PROJECT_NAME}/${data.name}_files/${level}/${x}_${y}.jpeg`
 	            	}
 	    		};
 

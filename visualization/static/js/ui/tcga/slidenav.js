@@ -1,19 +1,19 @@
-define("tcga/slidenav", ["config", "viewer", "pubsub", "slide", "jquery", "webix"], function(config, viewer, pubsub, slide, $) {
+define("tcga/slidenav", ["config", "viewer", "pubsub", "slide", "jquery", "webix"], function (config, viewer, pubsub, slide, $) {
 
     webix.proxy.PagingGirderItems = {
-      $proxy:true,
-      load:function(view, callback, details){
-        // if (details){
-        //   var data = webix.ajax(this.source+"?limit="+details.count+"&offset="+details.start);
-        // } else {
-        //     var data = webix.ajax(this.source+"?limit=5&offset=0"); 
-        // }
-        var data = webix.ajax(this.source);
-         
-        data.then((resp) => {
-            webix.ajax.$callback(view, callback, resp.text());
-        }); 
-      }
+        $proxy: true,
+        load: function (view, callback, details) {
+            // if (details){
+            //   var data = webix.ajax(this.source+"?limit="+details.count+"&offset="+details.start);
+            // } else {
+            //     var data = webix.ajax(this.source+"?limit=5&offset=0"); 
+            // }
+            var data = webix.ajax(this.source);
+
+            data.then((resp) => {
+                webix.ajax.$callback(view, callback, resp.text());
+            });
+        }
     };
 
     var thumbnailsPanel = {
@@ -21,7 +21,8 @@ define("tcga/slidenav", ["config", "viewer", "pubsub", "slide", "jquery", "webix
         id: "thumbnails",
         select: true,
         // template: "<div class='webix_strong'>#name#</div><img src='" + config.BASE_URL + "/item/#_id#/tiles/thumbnail'/>",
-        template: "<div class='webix_strong'>#name#</div><img src='" + config.BASE_URL + "/item/#_id#/tiles/thumbnail'/>",
+        // template: "<div class='webix_strong'>#name#</div><img src='" + config.BASE_URL + config.PROJECT_NAME + "/#_id#/thumbnail'/>",
+        template: "<div class='webix_strong'>#name#</div><img src='https://i.imgur.com/JlpBQOV.png'/>",
         pager: "item_pager",
         datafetch: 25,
         type: {
@@ -29,24 +30,24 @@ define("tcga/slidenav", ["config", "viewer", "pubsub", "slide", "jquery", "webix
             width: 200
         },
         on: {
-            onItemClick: function(id, e, node) {
+            onItemClick: function (id, e, node) {
                 var item = this.getItem(id);
                 console.log(item);
                 slide.init(item);
             },
-            onAfterLoad: function(){
-                if(this.getFirstId()){
+            onAfterLoad: function () {
+                if (this.getFirstId()) {
                     var item = this.getItem(this.getFirstId());
                     slide.init(item);
                 }
             },
-            onAfterRender: webix.once(function() {
+            onAfterRender: webix.once(function () {
                 // var url = "PagingGirderItems->" + config.BASE_URL + "/tcga/cohort/" + cohorts[0]._id + "/images";
                 var url = "PagingGirderItems->" + config.BASE_URL + config.PROJECT_NAME + "/images";
                 $$("thumbnails").clearAll();
-                $$("thumbnails").load(url); 
+                $$("thumbnails").load(url);
                 // $.get(config.BASE_URL + "/tcga/cohort", function(resp){
-                    
+
                 //     var cohorts = resp["data"];
                 //     // var cohortList = $$("slideset").getPopup().getList();
                 //     // cohortList.clearAll();
@@ -62,13 +63,13 @@ define("tcga/slidenav", ["config", "viewer", "pubsub", "slide", "jquery", "webix
     };
 
     itemPager = {
-        view:"pager",
+        view: "pager",
         id: "item_pager",
-        height:45,
+        height: 45,
         template: "<center>{common.prev()}{common.page()}/#limit#{common.next()}<br/>(#count# slides)</center>",
-        animate:true,
-        size:5,
-        group:4
+        animate: true,
+        size: 5,
+        group: 4
     };
 
     //dropdown for slide groups
@@ -81,25 +82,25 @@ define("tcga/slidenav", ["config", "viewer", "pubsub", "slide", "jquery", "webix
     var slidesPanel = {
         id: "slidenav",
         header: "Slides " + wideIcon + narrowIcon,
-        onClick:{
+        onClick: {
             wide: (event, id) => {
                 var count = $$("thumbnails").count();
-                this.config.width = 205*6;
+                this.config.width = 205 * 6;
                 this.resize();
 
-              $$("item_pager").config.size = Math.min(30, count);
-              $$("item_pager").refresh();
-              $$("thumbnails").refresh();
-              return false;
-            }, 
+                $$("item_pager").config.size = Math.min(30, count);
+                $$("item_pager").refresh();
+                $$("thumbnails").refresh();
+                return false;
+            },
             narrow: (event, id) => {
-              this.config.width = 220;
-              this.resize();
+                this.config.width = 220;
+                this.resize();
 
-              $$("item_pager").config.size = 5;
-              $$("item_pager").refresh();
-              $$("thumbnails").refresh();
-              return false;
+                $$("item_pager").config.size = 5;
+                $$("item_pager").refresh();
+                $$("thumbnails").refresh();
+                return false;
             }
         },
         body: {

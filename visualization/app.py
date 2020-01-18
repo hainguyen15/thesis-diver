@@ -1,21 +1,20 @@
 #!/home/hainq/anaconda3/envs/thesis/bin/python
 import os
-import json
-import openslide
-from openslide import OpenSlide, OpenSlideError
-from openslide.deepzoom import DeepZoomGenerator
+from bson.objectid import ObjectId  
 
 from flask import ( 
     Flask, jsonify, 
     make_response, render_template,
-    request
+    request, url_for
 )
 from flask_restful import abort
 from flask_cors import CORS
 from flask_pymongo import PyMongo
 
 from werkzeug.utils import import_string
+from openslide import OpenSlideError
 from utils import SlideCache, PILBytesIO, JSONEncoder
+
 
 app = Flask(__name__)
 
@@ -50,69 +49,46 @@ def index(project_name='default'):
     return render_template('index.html', project_name=project_name, base_url=app.base_url)
 
 
-@app.route('/<project_name>/<fileid>/tiles')
-def slide_props(project_name, fileid):
-    slide = OpenSlide(os.path.join(app.basedir, project_name, 'wsi', f'{fileid}.svs'))
-    dz = DeepZoomGenerator(slide)
-    response = {
-        'levels': dz.level_count,
-        'name': fileid,
-        'magnification': slide.properties[openslide.PROPERTY_NAME_OBJECTIVE_POWER],
-        'mm_x': slide.properties[openslide.PROPERTY_NAME_MPP_X],
-        'mm_y': slide.properties[openslide.PROPERTY_NAME_MPP_Y],
-        'sizeX': slide.level_dimensions[0][0],
-        'sizeY': slide.level_dimensions[0][1],
-        'tileHeight': app.config['DEEPZOOM_TILE_SIZE'],
-        'tileWidth': app.config['DEEPZOOM_TILE_SIZE']
-    }
-    slide.close()
-    return jsonify(response)
-
-
-@app.route('/<project_name>/<fileid>/anno')
-def slide_geometry(project_name, fileid):
-    geojson = os.path.join(app.basedir, project_name, 'geojson', f'{fileid}.json')
-    with open(geojson) as res:
-        data = json.load(res)
-    return jsonify(data)
-
-
-@app.route('/<path:path>_files/<int:level>/<int:col>_<int:row>.<imformat>')
-def tile(path, level, col, row, imformat):
-    slide_obj = _get_slide(path)
-    imformat = imformat.lower()
-    if imformat not in ['jpeg', 'png']:
-        # Not supported by Deep Zoom
+@app.route('/<project_name>/<_id>/tiles')
+def slide_props(project_name, _id):
+    data = mongo.db.images.find_one({ '_id': ObjectId(_id), "project_name": project_name }, { "tiles": 1, "name": 1 })
+    if data is None:
         abort(404)
-    try:
-        tile_obj = slide_obj.get_tile(level, (col, row))
-    except ValueError:
-        # Invalid level or coordinates
-        abort(404)
-    buf = PILBytesIO()
-    tile_obj.save(buf, imformat, quality=app.config['DEEPZOOM_TILE_QUALITY'])
-    resp = make_response(buf.getvalue())
-    resp.mimetype = 'image/%s' % imformat
-    return resp
+    return jsonify(data), 200
 
 
-def _get_slide(path):
-    path = os.path.abspath(os.path.join(app.basedir, path))
-    if not os.path.exists(path):
-        abort(404)
-    try:
-        slide_cache = app.cache.get(path)
-        slide_cache.filename = os.path.basename(path)
-        return slide_cache
-    except OpenSlideError:
-        abort(404)
+@app.route('/<project_name>/<_id>/anno', methods=['GET', 'POST'])
+def slide_geometry(project_name, _id):
+    if request.method == 'POST':
+        data = request.get_json()
+        if data.get('meta', None) is None:
+            abort(403, message='Invalid meta')
+
+        if data.get('geojslayer', None):
+            abort(403, message='No geojslayer in meta')
+        
+        mongo.db.images.update_one({ "_id": ObjectId(_id) }, { "$set": { "meta": data['meta'] } })
+        return url_for('slide_geometry', project_name=project_name, _id=_id)
+    # GET method
+    else:
+        data = mongo.db.images.find_one(
+            { '_id': ObjectId(_id), "project_name": project_name }, 
+            { "meta": 1, 'name': 1 }
+        )
+        if data is None:
+            abort(404)
+        return jsonify(data), 200
+        # import json
+        # with open('template.json') as res:
+        #     data = json.load(res)
+        # return jsonify(data)
 
 
 @app.route('/<project_name>/images', methods=['GET', 'POST', 'DELETE', 'PATCH'])
 def proj_images(project_name):
     if request.method == 'GET':
-        data = mongo.db.images.find({ 'project_name': project_name })
-        return jsonify(data), 200
+        data = mongo.db.images.find({ "project_name": project_name }, { 'meta': 0 })
+        return jsonify(list(data)), 200
 
     data = request.get_json()
     # POST multiple images at the same time
@@ -131,6 +107,34 @@ def proj_images(project_name):
         })
     else:
         raise NotImplementedError
+
+
+@app.route('/<project_name>/<path:path>_files/<int:level>/<int:col>_<int:row>.jpeg')
+def tile(project_name, path, level, col, row):
+    slide_obj = _get_slide(project_name, path)
+    try:
+        tile_obj = slide_obj.get_tile(level, (col, row))
+    except ValueError:
+        abort(404, message='Invalid level or coordinates')
+
+    buf = PILBytesIO()
+    tile_obj.save(buf, 'jpeg', quality=app.config['DEEPZOOM_TILE_QUALITY'])
+    resp = make_response(buf.getvalue())
+    resp.mimetype = 'image/%s' % 'jpeg'
+    return resp
+
+
+def _get_slide(project_name, path):
+    path = os.path.abspath(os.path.join(app.basedir, project_name, 'wsi', path))
+    if not os.path.exists(path):
+        abort(404)
+    try:
+        slide_cache = app.cache.get(path)
+        slide_cache.filename = os.path.basename(path)
+        return slide_cache
+    except OpenSlideError:
+        abort(404)
+
 
 if __name__ == "__main__":
     app.run(debug=True)

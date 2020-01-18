@@ -197,11 +197,11 @@ require(["viewer", "slide", "geo", "pubsub", "config"], function(viewer, slide, 
 
         animationInProgress = false;
         // initialize the geojs viewer
+        
         const params = geo.util.pixelCoordinateParams('#geojs', slide.tiles.sizeX, slide.tiles.sizeY, slide.tiles.tileWidth, slide.tiles.tileHeight);
         if (DEBUG) {
-            //console.log("SLIDE: " + JSON.stringify(slide));
+            console.log("SLIDE: " + JSON.stringify(slide));
         }
-
         params.map.clampZoom = false;
         params.map.clampBoundsX = false;
         params.map.clampBoundsY = false;
@@ -451,12 +451,13 @@ require(["viewer", "slide", "geo", "pubsub", "config"], function(viewer, slide, 
 
     function getMetadataAndLoadAnnotations() {
         // var url = config.BASE_URL + "/item/" + slide._id;
-        var url = 'http://localhost:5000/proj/01_01_0088';
+        var url = `${config.BASE_URL}${config.PROJECT_NAME}/${slide._id}/anno`;
         webix.ajax().get(url, (text) => {
             resetDataStructures();
             currentSlide = JSON.parse(text);
             if (typeof currentSlide === "undefined" || typeof currentSlide.meta === "undefined") {
                 //DO NOTHING
+                console.log(' DO NOTHING');
             } else {
 
                 // if (!(typeof currentSlide.meta === "undefined")) {
@@ -478,7 +479,7 @@ require(["viewer", "slide", "geo", "pubsub", "config"], function(viewer, slide, 
                 //Reload existing annotations.
                 if (typeof currentSlide.meta.geojslayer === "undefined") {
                     if (DEBUG)
-                        console.log("No exisitng annotations found");
+                        console.log("No existing annotations found");
                 } else if (!isEmpty(currentSlide.meta.geojslayer)) {
                     var geojsJSON = currentSlide.meta.geojslayer;
                     if (DEBUG)

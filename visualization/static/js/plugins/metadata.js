@@ -28,8 +28,9 @@ require(["pubsub", "config"], function(pubsub, config) {
     If no pathology files are found, disable the button!
     */
     pubsub.subscribe("SLIDE", function(msg, slide) {
-        caseId = slide.tcga.caseId;
-        var url = config.BASE_URL + "/tcga/case/" + slide.tcga.caseId + "/metadata/tables";
+        // caseId = slide.tcga.caseId;
+        // var url = config.BASE_URL + "/tcga/case/" + slide.tcga.caseId + "/metadata/tables";
+        var url = `${config.BASE_URL}${config.PROJECT_NAME}/${slide._id}/tiles`
         $$("metadata_list").clearAll();
 
         $.get(url, function(tables){

@@ -22,7 +22,6 @@ define("viewer", ["osdImgHelper","osd", "pubsub","config"], function(oshIH, osd,
 
       //this loads after the viewer is created..
 
-      //  console.log(config);
      if ( config.MODULE_CONFIG["zoomButtons"] )  { require(["zoomButtons"])};
 
     return viewer;

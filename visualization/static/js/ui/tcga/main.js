@@ -25,10 +25,15 @@ define("tcga/main", ["tcga/slidenav", "common/toolbar", "common/header", "common
                 // collapsed: true,
                 collapsed: false,
                 cols:[
-                    { header:"SimpleAnnotator",  id: "tcgaRightAccordion",
-                    body: { view:"layout", id: "tcgaRightAccordionBody", rows: [ { template: "content 1",  id: "tcgaRightplaceHolder", gravity: 0.01} ]},
+                    { 
+                        header: "Image properties",  id: "tcgaRightAccordion",
+                        body: { view:"layout", id: "tcgaRightAccordionBody", 
+                            rows: [ 
+                                { template: "content 1",  id: "tcgaRightplaceHolder", gravity: 0.01} 
+                            ]
+                        },
                             // , width:150
-                        }
+                    }
                 ]
             };
 
@@ -69,7 +74,8 @@ define("tcga/main", ["tcga/slidenav", "common/toolbar", "common/header", "common
                                 viewerPanel,
                                 footer
                             ]
-                        }
+                        },
+                        rightPanelStub
                     ]
                 }
             ]

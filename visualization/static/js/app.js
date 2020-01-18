@@ -29,21 +29,21 @@ you want to return to the return object
 
 define(["ui", "config", "jquery", "session", "webix", "module"], function(ui, config, $, session) {
 
-    // if (session.valid()) {
-    //     $.ajaxSetup({
-    //         headers: { 'Girder-Token': session.token() }
-    //     });
+    if (session.valid()) {
+        $.ajaxSetup({
+            headers: { 'Girder-Token': session.token() }
+        });
 
-    //     webix.ajax().headers({
-    //         'Girder-Token': session.token()
-    //     });
+        webix.ajax().headers({
+            'Girder-Token': session.token()
+        });
 
-    //     webix.attachEvent("onBeforeAjax",
-    //         function(mode, url, data, request, headers, files, promise) {
-    //             headers["Girder-Token"] = session.token();
-    //         }
-    //     );
-    // }
+        webix.attachEvent("onBeforeAjax",
+            function(mode, url, data, request, headers, files, promise) {
+                headers["Girder-Token"] = session.token();
+            }
+        );
+    }
 
     function updateConfig(baseUrl, projName) {
         config.PROJECT_NAME = projName;
@@ -52,7 +52,6 @@ define(["ui", "config", "jquery", "session", "webix", "module"], function(ui, co
 
     function init() {
         webix.ready(function() {
-            console.log(`THIS IS FROM APP JS ${config.PROJECT_NAME}`);
             ui.init();
     
             webix.extend($$("viewer_panel"), webix.ProgressBar);
