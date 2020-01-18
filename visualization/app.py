@@ -43,7 +43,7 @@ def setup():
     opts = dict((v, app.config[k]) for k, v in config_map.items())
     app.cache = SlideCache(app.config['SLIDE_CACHE_SIZE'], opts)
 
-
+@app.route('/')
 @app.route('/<project_name>')
 def index(project_name='default'):
     return render_template('index.html', project_name=project_name, base_url=app.base_url)

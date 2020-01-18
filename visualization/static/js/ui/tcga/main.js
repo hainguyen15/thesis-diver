@@ -14,25 +14,36 @@ Return:
     - viewer - Openseadragon viewer object
  */
 
-define("tcga/main", ["tcga/slidenav", "common/toolbar", "common/header", "common/footer", "webix"], function(slidenav, toolbar, header, footer) {
+define("tcga/main", ["tcga/slidenav", "common/toolbar", "common/header", "common/footer", "pubsub", "webix"], function(slidenav, toolbar, header, footer, pubsub) {
 
+    pubsub.subscribe("SLIDE", function(msg, slide) {
+        $$("metadata_list").clearAll();
+        meta = []
+        $.each(slide.tiles, function(key, val){
+            meta.push({"key": key, "value": val});
+        })
+
+        $$("metadata_list").parse(meta);
+    });
 
     rightPanelStub = {
                 multi:true,
                 view:"accordion",
                 gravity: 0.3,
                 id: "rightPanelStub",
-                // collapsed: true,
-                collapsed: false,
+                collapsed: true,
                 cols:[
                     { 
                         header: "Image properties",  id: "tcgaRightAccordion",
-                        body: { view:"layout", id: "tcgaRightAccordionBody", 
-                            rows: [ 
-                                { template: "content 1",  id: "tcgaRightplaceHolder", gravity: 0.01} 
+                        body: {   
+                            view: "datatable", 
+                            select:"row",
+                            id: "metadata_list",
+                            columns:[
+                                { id: "key", header: "Key", width: 150},
+                                { id: "value", header: "Value", fillspace:true}
                             ]
-                        },
-                            // , width:150
+                        }
                     }
                 ]
             };
@@ -49,8 +60,6 @@ define("tcga/main", ["tcga/slidenav", "common/toolbar", "common/header", "common
                     id: "viewer_body",
                     cols: [
                         { view: "template", id: "viewer_panel", content: "geo_osd" },
-                        // { gravity: 0.2, collapsed: true, view: "accordion", multi: true, id: , 
-                        // body: { rows: [{ template: "HI" }] } }
                     ]
                 }
             ]

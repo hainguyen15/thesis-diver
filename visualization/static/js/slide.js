@@ -1,15 +1,8 @@
-define("slide", ["viewer", "config", "pubsub"], function(viewer, config, pubsub){
+define("slide", ["viewer", "config", "pubsub", "scalebar"], function(viewer, config, pubsub, scalebar){
 
 	function init(item){
 		$.extend(this, item);
 		this.item = item;
-
-		// if($$("footer") != undefined){
-		// 	$$("footer").define("data",{
-		// 		name: this.item.name,
-		// 		url: "http://adrc.digitalslidearchive.emory.edu/dsa_base/#slide/" + this.item._id
-		// 	});
-		// }
 		
        	$.ajax({
        		context: this,
@@ -32,7 +25,11 @@ define("slide", ["viewer", "config", "pubsub"], function(viewer, config, pubsub)
 	            	}
 	    		};
 
-	        	viewer.open(tileSource);
+				viewer.open(tileSource);
+				var mpp = (data.tiles.mm_x + data.tiles.mm_y) / 2
+				viewer.scalebar({
+					pixelsPerMeter: mpp ? (1e6 / mpp) : 0
+				});
 	        }
 		});
 	}

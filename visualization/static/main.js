@@ -35,13 +35,14 @@ require = {
         "osdImgHelper": "static/js/bower_components/openseadragon-imaginghelper/index",
         "folderMetadata": "static/js/plugins/folderMetadata",
         "zoomButtons": "static/js/plugins/zoomButtons",
-        "tagger": "static/js/plugins/tagger"
-
+        "tagger": "static/js/plugins/tagger",
+        "scalebar": "static/js/lib/openseadragon-scalebar"
     },
 
     shim: {
         "osdFilters": ["osd"],
         "svg": ["osd"],
+        "scalebar": ["osd"],
         "common": ["login"],
         "osdImgHelper": ["osd", "svg"]
 
