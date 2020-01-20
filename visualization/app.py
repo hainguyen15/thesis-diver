@@ -1,7 +1,9 @@
 #!/home/hainq/anaconda3/envs/thesis/bin/python
 import os
+import tempfile
 from bson.objectid import ObjectId  
 
+import requests as r
 from flask import ( 
     Flask, jsonify, 
     make_response, render_template,
@@ -10,10 +12,11 @@ from flask import (
 from flask_restful import abort
 from flask_cors import CORS
 from flask_pymongo import PyMongo
-
+from streaming_form_data import StreamingFormDataParser
+from streaming_form_data.targets import FileTarget
 from werkzeug.utils import import_string
 from openslide import OpenSlideError
-from utils import SlideCache, PILBytesIO, JSONEncoder
+from utils import SlideCache, PILBytesIO, JSONEncoder, process_zip
 
 
 app = Flask(__name__)
@@ -43,6 +46,29 @@ def setup():
     opts = dict((v, app.config[k]) for k, v in config_map.items())
     app.cache = SlideCache(app.config['SLIDE_CACHE_SIZE'], opts)
 
+
+@app.route('/<project_name>/upload/', methods = ['POST'])
+def upload_file(project_name='default'):
+    # project_name = request.form.get('project_name', 'default')
+    # print(project_name)
+    file_ = FileTarget(os.path.join(tempfile.gettempdir(), 'temp.zip'))
+    parser = StreamingFormDataParser(headers=request.headers)
+    parser.register('file', file_)
+    while True:
+        chunk = request.stream.read(8192)
+        if not chunk:
+            break
+        parser.data_received(chunk)
+    
+    status, data = process_zip('/tmp/temp.zip', project_name, app.basedir)
+    if not status:
+        raise FileNotFoundError
+    
+    resp = r.post(f'{app.base_url}{project_name}/images', json=data)
+    
+    return jsonify(resp.json())
+
+
 @app.route('/')
 @app.route('/<project_name>')
 def index(project_name='default'):
@@ -62,13 +88,20 @@ def slide_geometry(project_name, _id):
     if request.method == 'POST':
         data = request.get_json()
         if data.get('meta', None) is None:
-            abort(403, message='Invalid meta')
+            abort(400, message='Invalid meta')
 
         if data.get('geojslayer', None):
-            abort(403, message='No geojslayer in meta')
+            abort(400, message='No geojslayer in meta')
         
+        temp = mongo.db.images.find_one({ "name": _id }, { "_id": 1 })
+        _id = temp['_id']
         mongo.db.images.update_one({ "_id": ObjectId(_id) }, { "$set": { "meta": data['meta'] } })
-        return url_for('slide_geometry', project_name=project_name, _id=_id)
+
+        return jsonify({
+            'status': True,
+            'message': f'Image {_id} processed successfully.',
+            'prediction': url_for('slide_geometry', project_name=project_name, _id=_id)
+        })
     # GET method
     else:
         data = mongo.db.images.find_one(
@@ -94,11 +127,11 @@ def proj_images(project_name):
     # POST multiple images at the same time
     if request.method == 'POST':
         if data.get('project_name', None) is None or data.get('images', None) is None:
-            abort(403, message='Requested data is invalid.')
+            abort(400, message='Requested data is invalid.')
 
         imgs = data['images']
         if not imgs:
-            abort(403, message='Image list is empty!')
+            abort(400, message='Image list is empty!')
         
         mongo.db.images.insert_many(imgs)
         return jsonify({

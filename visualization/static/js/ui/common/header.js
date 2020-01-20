@@ -1,34 +1,13 @@
-define("common/header", ["login", "session", "config"], function(login, session, config) {
+define("common/header", ["config"], function(config) {
     
-    if(session.valid())
-        loginBtn = { id:"login_btn", value:"Logout (" + session.username() + ")"}
-    else
-        loginBtn = { id:"login_btn", value:"Login"}
-
     var menu = {
         view:"menu",
         width: 250,
         id: "header_menu",
         data: [
-            loginBtn,
-            { id:"1",value:"TCGA Resources", submenu:[
-                 {value:"TCGA Analytical Tools", href: "https://tcga-data.nci.nih.gov/docs/publications/tcga/", target:"_blank"},
-             ]},
-            { id:"3",value:"Help", submenu:[
-                {value:"About the CDSA"},
-                {value:"Repository Stats"}
-            ]}
         ],
         type:{height:15},
-        css: "menu",
-        on:{ 
-            onItemClick:function(id){
-                if(id == "login_btn"){
-                    var val = $$('header_menu').config.data[0].value;
-                    val == "Login" ? $$("login_window").show() : login.logout();
-                }
-            }
-        }
+        css: "menu"
     };
 
     header = {

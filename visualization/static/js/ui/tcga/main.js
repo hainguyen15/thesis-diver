@@ -31,7 +31,7 @@ define("tcga/main", ["tcga/slidenav", "common/toolbar", "common/header", "common
                 view:"accordion",
                 gravity: 0.3,
                 id: "rightPanelStub",
-                collapsed: true,
+                collapsed: false,
                 cols:[
                     { 
                         header: "Image properties",  id: "tcgaRightAccordion",

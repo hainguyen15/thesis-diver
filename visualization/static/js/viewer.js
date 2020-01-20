@@ -11,7 +11,7 @@ Return:
 	- viewer - Openseadragon viewer object
  */
 
-define("viewer", ["osdImgHelper","osd", "pubsub","config", "scalebar"], function(oshIH, osd, pubsub,config, scalebar) {
+define("viewer", ["osd", "pubsub","config", "scalebar"], function(osd, pubsub,config, scalebar) {
 
     var viewer = osd({
         id: 'image_viewer',

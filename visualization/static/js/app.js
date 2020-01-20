@@ -27,23 +27,23 @@ are looking for, then go to the module and add the variable
 you want to return to the return object 
 */
 
-define(["ui", "config", "jquery", "session", "webix", "module"], function(ui, config, $, session) {
+define(["ui", "config", "jquery", "webix"], function(ui, config, $) {
 
-    if (session.valid()) {
-        $.ajaxSetup({
-            headers: { 'Girder-Token': session.token() }
-        });
+    // if (session.valid()) {
+    //     $.ajaxSetup({
+    //         headers: { 'Girder-Token': session.token() }
+    //     });
 
-        webix.ajax().headers({
-            'Girder-Token': session.token()
-        });
+    //     webix.ajax().headers({
+    //         'Girder-Token': session.token()
+    //     });
 
-        webix.attachEvent("onBeforeAjax",
-            function(mode, url, data, request, headers, files, promise) {
-                headers["Girder-Token"] = session.token();
-            }
-        );
-    }
+    //     webix.attachEvent("onBeforeAjax",
+    //         function(mode, url, data, request, headers, files, promise) {
+    //             headers["Girder-Token"] = session.token();
+    //         }
+    //     );
+    // }
 
     function updateConfig(baseUrl, projName) {
         config.PROJECT_NAME = projName;
@@ -58,10 +58,10 @@ define(["ui", "config", "jquery", "session", "webix", "module"], function(ui, co
             webix.extend($$("viewer_panel"), webix.OverlayBox);
     
     
-            if (config.UI == "standard")
-                require(["routes", "login", ]);
-            else
-                require(["routes",  "login" ]);
+            // if (config.UI == "standard")
+            //     require(["routes", "login", ]);
+            // else
+            //     require(["routes",  "login" ]);
             });
     
         $.each(config.MODULE_CONFIG, function(moduleName, moduleEnabled) {

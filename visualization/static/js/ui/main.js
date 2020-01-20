@@ -14,19 +14,10 @@ Return:
     - viewer - Openseadragon viewer object
  */
 
-define("ui/main", ["standard", "tcga", "config"], function(standard, tcga, config) {
+define("ui/main", ["tcga"], function(tcga) {
 
     function init(){
-        switch(config.UI){
-            case "standard":
-                standard.init();
-                break;
-            case "tcga":
-                tcga.init();
-                break;
-            default:
-                console.error("Invalid configuration: " + config.UI + " UI not found");
-        }
+        tcga.init();
 
         webix.event(window, 'resize', function(){
             $$("root").resize();
