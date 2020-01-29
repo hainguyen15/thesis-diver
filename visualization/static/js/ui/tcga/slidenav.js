@@ -21,7 +21,7 @@ define("tcga/slidenav", ["config", "viewer", "pubsub", "slide", "jquery", "webix
         id: "thumbnails",
         select: true,
         // template: "<div class='webix_strong'>#name#</div><img src='" + config.BASE_URL + "/item/#_id#/tiles/thumbnail'/>",
-        template: "<div class='webix_strong'>#name#</div><img src='" + config.BASE_URL + config.PROJECT_NAME + "/#name#/thumbnail'/>",
+        template: "<div class='webix_strong'>#name#</div><img src='http://35.206.226.43:5000/default/thumbnails/#thumbnail#'/>",
         // template: "<div class='webix_strong'>#name#</div><img src='https://i.imgur.com/JlpBQOV.png'/>",
         pager: "item_pager",
         datafetch: 25,

@@ -32,6 +32,16 @@ html, body{
 .webix_dataview_item{
   text-align:center;
 }
+.webixbutton, .webixtype_base, .webixtype_next, .webixtype_prev, .webix_accordionitem_header {
+  background: rgb(0, 10, 150);
+}
+
+.webix_segment_0, .webix_segment_1, .webix_segment_N, 
+.webix_el_toggle button, .webixbutton, .webix_el_button button,
+.webix_view .webix_pager_item {
+  background: rgb(0, 10, 150);
+  border: 1px solid rgb(0, 10, 150);
+}
 
 .webix_dataview_item img { 
   max-width: 100%;
@@ -81,7 +91,7 @@ html, body{
 }
 
 .footer{
-  background-color: #3498DB;
+  background-color: rgb(0, 10, 150);
 }
 
 .footer span{
