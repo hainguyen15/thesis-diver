@@ -98,23 +98,23 @@ require(["viewer", "slide", "geo", "pubsub", "config"], function(viewer, slide, 
                     }
                 }
             },
-            {
-                view: "toggle",
-                id: "show_anno_toggle",
-                type: "iconButton",
-                name: "Anno",
-                inputWidth: 180,
-                offIcon: "toggle-off",
-                onIcon: "toggle-on",
-                offLabel: "Hide Prediction",
-                onLabel: "Show Prediction",
-                on: {
-                    onItemClick: function() {
-                        // toggleLabel();
-                        // toggleAnno
-                    }
-                }
-            },
+            // {
+            //     view: "toggle",
+            //     id: "show_anno_toggle",
+            //     type: "iconButton",
+            //     name: "Anno",
+            //     inputWidth: 180,
+            //     offIcon: "toggle-off",
+            //     onIcon: "toggle-on",
+            //     offLabel: "Hide Prediction",
+            //     onLabel: "Show Prediction",
+            //     on: {
+            //         onItemClick: function() {
+            //             // toggleLabel();
+            //             // toggleAnno
+            //         }
+            //     }
+            // },
             {
                 view: "toggle",
                 id: "show_labels_toggle",

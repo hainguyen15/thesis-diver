@@ -40,8 +40,8 @@ define("tcga/main", ["tcga/slidenav", "common/toolbar", "common/header", "common
                             select:"row",
                             id: "metadata_list",
                             columns:[
-                                { id: "key", header: "Key", width: 150},
-                                { id: "value", header: "Value", fillspace:true}
+                                { id: "key", header: "Key", fillspace: true},
+                                { id: "value", header: "Value", width: 120}
                             ]
                         }
                     }
@@ -83,8 +83,8 @@ define("tcga/main", ["tcga/slidenav", "common/toolbar", "common/header", "common
                                 viewerPanel,
                                 footer
                             ]
-                        },
-                        rightPanelStub
+                        }
+                        // rightPanelStub
                     ]
                 }
             ]

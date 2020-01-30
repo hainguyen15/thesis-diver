@@ -14,7 +14,7 @@ require(["pubsub", "config"], function(pubsub, config) {
         id: "metadata_window_btn",
         label: "Metadata",
         view: "button",
-        disabled: true,
+        disabled: false,
         click: ("$$('metadata_window').show();")
     });
 
@@ -30,42 +30,16 @@ require(["pubsub", "config"], function(pubsub, config) {
     pubsub.subscribe("SLIDE", function(msg, slide) {
         // caseId = slide.tcga.caseId;
         // var url = config.BASE_URL + "/tcga/case/" + slide.tcga.caseId + "/metadata/tables";
-        var url = `${config.BASE_URL}${config.PROJECT_NAME}/${slide._id}/tiles`
         $$("metadata_list").clearAll();
-
-        $.get(url, function(tables){
-            if(tables.length){
-                $$("metadata_tables").define("options", tables);
-                $$("metadata_tables").setValue(tables[0].id);
-                loadMetadata(caseId, tables[0].id);
-                $$("metadata_window_btn").enable();
-            }
-            else{
-                $$("metadata_window_btn").disable();
-            }
+        meta = []
+        $.each(slide.tiles, function(key, val){
+            meta.push({"key": key, "value": val});
         })
+
+        $$("metadata_list").parse(meta);       
+        
     });
 
-    /*
-    Load metadata into the metadata datatable
-    The function takes 
-
-    caseId - patient ID/case ID
-    table - type of metadata to render  
-     */
-    function loadMetadata(caseId, table){
-        var url = config.BASE_URL + "/tcga/case/" + caseId + "/metadata/" + table;
-
-        $.get(url, function(resp){
-            meta = []
-            $.each(resp, function(key, val){
-                meta.push({"key": key, "value": val});
-            })
-
-            $$("metadata_list").clearAll();
-            $$("metadata_list").parse(meta);
-        })
-    }
     
     /* Window */
     var view = {
@@ -85,20 +59,7 @@ require(["pubsub", "config"], function(pubsub, config) {
         width: 900,
         height: 800,
         body:{
-            rows:[
-                {
-                    view: "combo",
-                    id: "metadata_tables",
-                    value: 1,
-                    on: {
-                        onChange: function(id){
-                            var table = this.getPopup().getBody().getItem(id);
-                            loadMetadata(caseId, table.id);
-                        }
-                    }
-                },
-                {   
-                    view: "datatable", 
+            view: "datatable", 
                     width:800,
                     height:450,
                     select:"row",
@@ -107,8 +68,6 @@ require(["pubsub", "config"], function(pubsub, config) {
                         { id: "key", header: "Key", width: 250},
                         { id: "value", header: "Value", fillspace:true}
                     ]
-                }
-            ]
         }
     };
 
