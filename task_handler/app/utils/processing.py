@@ -26,29 +26,33 @@ def process_zip(path, project_name):
     for wsi in os.listdir(save_dir):
         slide = OpenSlide(os.path.join(save_dir, wsi))
         
-        _save_thumbnails(slide, thumbnails, wsi)
+        fname = _save_thumbnails(slide, thumbnails, wsi)
         
         temp = {}
-        temp['tiles'] = _extract_tiles(slide, wsi)
+        temp['tiles'] = _extract_tiles(slide)
+        temp['name'] = wsi
+        temp['project_name'] = project_name
         temp['meta'] = {}
+        temp['thumbnail'] = fname
         data['images'].append(temp)
-                
+
         slide.close()
     return True, data
 
 
 def _save_thumbnails(slide, thumb_dir, wsi_name):
-    width, height = slide.level_dimensions[-1]
+    width, height = slide.dimensions
     thumb_size = (width // 256, height // 256)
     thumbnail = slide.get_thumbnail(thumb_size)
-    thumbnail.save(os.path.join(thumb_dir, wsi_name.replace('.svs', '.png')))
+    fname = wsi_name.replace('.svs', '.png')
+    thumbnail.save(os.path.join(thumb_dir, fname))
+    return fname
 
 
-def _extract_tiles(slide, wsi_name):
+def _extract_tiles(slide):
     dz = DeepZoomGenerator(slide)
     return {
         'levels': dz.level_count,
-        'name': wsi_name.replace('.svs', ''),
         'magnification': slide.properties[openslide.PROPERTY_NAME_OBJECTIVE_POWER],
         'mm_x': slide.properties[openslide.PROPERTY_NAME_MPP_X],
         'mm_y': slide.properties[openslide.PROPERTY_NAME_MPP_Y],

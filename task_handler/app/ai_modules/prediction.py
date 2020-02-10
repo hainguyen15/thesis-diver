@@ -142,20 +142,19 @@ def predict_wsi(model, global_fixed, slide_path):
         return [score.argmax(1)[0] for score in scores]
 
     slide = OpenSlide(slide_path)
-    org_w, org_h = slide.level_dimensions[0]
-    
-    img = slide.read_region((0, 0), 2, slide.level_dimensions[2])
+    w, h = slide.level_dimensions[2]
+    img = slide.read_region((0, 0), 2, (w, h))
     slide.close()
     img.convert('RGB').save('/tmp/temp.jpg')
-    slide = ImageSlide(slide_path)
+    slide = ImageSlide('/tmp/temp.jpg')
 
     dz = deepzoom.DeepZoomGenerator(slide, tile_size=1024, overlap=0)
 
     cols, rows = dz.level_tiles[-1]
-    out = np.zeros((rows * 1024, cols * 1024, 3), dtype=np.uint8)
+    out = np.zeros((rows * 1024, cols * 1024), dtype=np.uint8)
 
-    for row in rows:
-        for col in cols:
+    for row in range(rows):
+        for col in range(cols):
             tile = dz.get_tile(dz.level_count - 1, (col, row)) # col, row
             tile_coors = dz.get_tile_coordinates(dz.level_count - 1, (col, row))
             left, top = tile_coors[0]
@@ -166,16 +165,13 @@ def predict_wsi(model, global_fixed, slide_path):
             tile = np.array(tile)
             processed = apply_filters(tile)
 
-            pred = predict([Image.fromarray(processed)], model, global_fixed)
+            pred = predict([Image.fromarray(processed)])
             pil_pred = pred[0].astype(np.uint8)
             
             newmask = remove_mask_overlay_background(processed, pil_pred)
 
             # applied_mask = apply_mask(tile, newmask)
             applied_mask = newmask
-            out[top:top+t_h, left:left+t_w, :] = applied_mask[:t_h, :t_w, :]
+            out[top:top+t_h, left:left+t_w] = applied_mask[:t_h, :t_w]
     
-    large = Image.fromarray(out)
-    large = large.resize((org_w, org_h), Image.BILINEAR)
-    slide.close()
-    return out, large
+    return out[:h, :w]
