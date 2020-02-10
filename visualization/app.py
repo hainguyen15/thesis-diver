@@ -87,10 +87,10 @@ def slide_props(project_name, _id):
 def slide_geometry(project_name, _id):
     if request.method == 'POST':
         data = request.get_json()
-        if data.get('meta', None) is None:
+        if not data.get('meta', None):
             abort(400, message='Invalid meta')
 
-        if data.get('geojslayer', None):
+        if not data['meta'].get('geojslayer', None):
             abort(400, message='No geojslayer in meta')
         
         temp = mongo.db.images.find_one({ "name": _id }, { "_id": 1 })
