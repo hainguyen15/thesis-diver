@@ -51,7 +51,7 @@ def quick_predict(self, project_name):
             raise Exception(f'Failed to update image {fname}')
         self.update_state(state='PROGRESS',
                     meta={
-                        'progress': '{0:.2f}%'.format(((i + 1) / total) * 100),
+                        'progress': '{0:.2f}'.format(((i + 1) / total) * 100),
                         'message': f'Processing {fname}'
                     }
                 )
