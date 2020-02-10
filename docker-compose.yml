@@ -1,0 +1,70 @@
+version: '3.6'
+services: 
+    mongo_img:
+        container_name: mongo_img
+        image: mongo
+        expose:
+            - 27017
+
+    cache:
+        container_name: diver_cache
+        image: redis
+        expose:
+            - 6379  
+
+    visualization:
+        container_name: diver_vis
+        image: hainq15/diver_vis:latest
+        volumes: 
+            - /home/hainq/diver_data/projects/:/usr/diver/projects
+        expose: 
+            - 5000
+        environment: 
+            - IMAGE_DB=mongodb://mongo_img:27017/diver_img
+            - FLASK_ENV=production
+            - BASE_URL=http://35.206.226.43:5000/
+        links:
+            - mongo_img
+        depends_on: 
+            - mongo_img
+
+    # celery_worker:
+    #     container_name: celery_worker
+    #     gpus: 0
+    #     image: hainq15/diver_task
+    #     command: celery worker -A celery_worker.celery -l info --pool solo
+    #     environment: 
+    #         - REDIS_URI=redis://cache:6379
+    #         - VIS_HOST=diver_vis:5000
+    #         - MODEL_PATH=/usr/diver/model/wsi.pth
+    #     links: 
+    #         - cache
+    #     depends_on: 
+    #         - cache
+    #     volumes: 
+    #         - /home/hainq/diver_data:/usr/diver/model
+    #         - /home/hainq/diver_data/projects/:/usr/diver/projects
+    
+    # task_handler:
+    #     container_name: diver_task
+    #     gpus: 0
+    #     image: hainq15/diver_task:latest
+    #     command: gunicorn -b 0.0.0.0:5001 run:app
+    #     environment: 
+    #         - REDIS_URI=redis://cache:6379
+    #     expose:
+    #         - 5001
+
+    # nginx: 
+    #     container_name: diver_nginx
+    #     image: hainq15/diver_nginx:latest
+    #     restart: always
+    #     ports: 
+    #         - 5000:5000
+    #         - 5001:5001
+    #     depends_on: 
+    #         - visualization
+    #         - task_handler
+    #     volumes: 
+    #         - /home/hainq/diver_data/projects/:/usr/diver/projects:ro
+    docker run --gpus 0 --name celery_worker -e REDIS_URI=redis://diver_cache:6379 -e VIS_HOST=diver_vis:5000 -e MODEL_PATH=/usr/diver/model/wsi.pth --link diver_cache --link diver_vis -v /home/hainq/diver_data:/usr/diver/model -v /home/hainq/diver_data/projects/:/usr/diver/projects hainq15/diver_task celery worker -A celery_worker.celery -l info --pool solo
