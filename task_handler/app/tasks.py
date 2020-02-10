@@ -38,17 +38,26 @@ def quick_predict(self, project_name):
     imgs = [os.path.join(img_dir, f) for f in os.listdir(img_dir)]
     total = len(imgs)
     self.update_state(state='PROGRESS',
-                    meta={'message': 'Prediction started'})
+                    meta={
+                        'progress': 0,
+                        'message': 'Getting started'
+                    }
+                )
     for i, img in enumerate(imgs):
         out = predict_wsi(model, global_fixed, img)
-        up_res = _update_prediction(project_name, os.path.basename(img), out)
+        fname = os.path.basename(img)
+        up_res = _update_prediction(project_name, fname, out)
         if not up_res:
-            raise Exception(f'Failed to update image {os.path.basename(img)}')
+            raise Exception(f'Failed to update image {fname}')
         self.update_state(state='PROGRESS',
-                    meta={'message': '{0:.2f}%'.format(((i + 1) / total) * 100)})
+                    meta={
+                        'progress': '{0:.2f}%'.format(((i + 1) / total) * 100),
+                        'message': f'Processing {fname}'
+                    }
+                )
 
     return {
-        'status': True,
+        'progress': 100,
         'message': f'Project \"{project_name}\" ({total} images) processed successfully'
     }
 

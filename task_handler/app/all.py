@@ -25,6 +25,7 @@ def taskstatus(task_id):
     else:
         response = {
             'state': task.state,
+            'progress': task.info.get('progress', None),
             'message': task.info.get('message', None)
         }
     return jsonify(response)
