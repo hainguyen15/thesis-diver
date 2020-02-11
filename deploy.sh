@@ -6,7 +6,7 @@ PubIP="$(dig +short myip.opendns.com @resolver1.opendns.com)"
 echo $PubIP
 docker run -d --name diver_vis --expose 5000 --link mongo_img \
 -e IMAGE_DB=mongodb://mongo_img:27017/diver_img \
--e BASE_URL=http://${PubIP}:5000/ \
+-e BASE_URL=http://${PubIP}/ \
 -v /home/hainq/diver_data/projects/:/usr/diver/projects \
 hainq15/diver_vis
 echo "Run Visualization"
@@ -21,7 +21,7 @@ docker run -d --name celery_worker --gpus 0 \
 -e MODEL_PATH=/usr/diver/model/wsi.pth \
 -v /home/hainq/diver_data:/usr/diver/model \
 -v /home/hainq/diver_data/projects/:/usr/diver/projects \
-hainq15/diver_task celery worker -A celery_worker.celery -l info --pool solo
+hainq15/diver_task celery worker -A celery_worker.celery -l info --pool gevent
 echo "Run Celery worker"
 
 docker run -d --name diver_task --gpus 0 --link diver_cache \
@@ -33,7 +33,7 @@ docker run -d --name diver_task --gpus 0 --link diver_cache \
 echo "Run Task handler"
 
 docker run -d --name diver_nginx \
--p 5000:5000 -p 5001:5001 \
+-p 80:5000 -p 5001:5001 \
 --link diver_vis --link diver_task \
 -v /home/hainq/diver_data/projects/:/usr/diver/projects:ro \
 hainq15/diver_nginx
