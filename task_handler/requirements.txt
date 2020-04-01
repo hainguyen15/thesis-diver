@@ -17,7 +17,7 @@ Werkzeug==0.16.0
 zipp==0.6.0
 openslide-python==1.1.1
 opencv-python==3.4.4.19
-Pillow==6.2.0
+Pillow==6.2.2
 scipy==1.1.0 
 scikit-image==0.14.2
 Flask-RESTful==0.3.8
